@@ -65,7 +65,7 @@ type testRunAnalysis struct {
 	positionOfTestRunNode []ast.Node
 }
 
-func (a *parallelAnalyzer) analyzeTestRun(pass *analysis.Pass, n ast.Node, testVar string) testRunAnalysis {
+func (a *parallelAnalyzer) analyzeTestRun(pass *analysis.Pass, n ast.Node, testVar string, parentCantParallel bool) testRunAnalysis {
 	var analysis testRunAnalysis
 
 	if methodRunIsCalledInTestFunction(n, testVar) {
@@ -79,7 +79,7 @@ func (a *parallelAnalyzer) analyzeTestRun(pass *analysis.Pass, n ast.Node, testV
 						analysis.hasParallel = methodParallelIsCalledInTestFunction(p, innerTestVar)
 					}
 					if !analysis.cantParallel {
-						analysis.cantParallel = methodSetenvIsCalledInTestFunction(p, innerTestVar)
+						analysis.cantParallel = parentCantParallel || methodSetenvIsCalledInTestFunction(p, innerTestVar)
 					}
 					return true
 				})
@@ -134,7 +134,7 @@ func (a *parallelAnalyzer) analyzeTestFunction(pass *analysis.Pass, funcDecl *as
 				if !analysis.funcCantParallelMethod {
 					analysis.funcCantParallelMethod = methodSetenvIsCalledInTestFunction(n, testVar)
 				}
-				runAnalysis := a.analyzeTestRun(pass, n, testVar)
+				runAnalysis := a.analyzeTestRun(pass, n, testVar, analysis.funcCantParallelMethod)
 				analysis.numberOfTestRun += runAnalysis.numberOfTestRun
 				analysis.positionOfTestRunNode = append(analysis.positionOfTestRunNode, runAnalysis.positionOfTestRunNode...)
 				return true
@@ -172,7 +172,7 @@ func (a *parallelAnalyzer) analyzeTestFunction(pass *analysis.Pass, funcDecl *as
 						if callExpr, ok := r.X.(*ast.CallExpr); ok && len(callExpr.Args) > 1 {
 							if funcLit, ok := callExpr.Args[1].(*ast.FuncLit); ok {
 								ast.Inspect(funcLit, func(p ast.Node) bool {
-									runAnalysis := a.analyzeTestRun(pass, p, innerTestVar)
+									runAnalysis := a.analyzeTestRun(pass, p, innerTestVar, analysis.funcCantParallelMethod)
 									analysis.numberOfTestRun += runAnalysis.numberOfTestRun
 									analysis.positionOfTestRunNode = append(analysis.positionOfTestRunNode, runAnalysis.positionOfTestRunNode...)
 									return true

@@ -181,13 +181,13 @@ func TestFunctionWithSetenvChild(t *testing.T) {
 	})
 }
 
-func TestFunctionSetenvChildrenCanBeParallel(t *testing.T) {
+func TestFunctionSetenvWithChildren(t *testing.T) {
 	// unable to call t.Parallel with t.Setenv
 	t.Setenv("foo", "bar")
-	t.Run("1", func(t *testing.T) { // want "Function TestFunctionSetenvChildrenCanBeParallel missing the call to method parallel in the test run"
+	t.Run("1", func(t *testing.T) {
 		fmt.Println("1")
 	})
-	t.Run("2", func(t *testing.T) { // want "Function TestFunctionSetenvChildrenCanBeParallel missing the call to method parallel in the test run"
+	t.Run("2", func(t *testing.T) {
 		fmt.Println("2")
 	})
 }
@@ -199,7 +199,7 @@ func TestFunctionRunWithSetenvSibling(t *testing.T) {
 		t.Setenv("foo", "bar")
 		fmt.Println("1")
 	})
-	t.Run("2", func(t *testing.T) { // want "Function TestFunctionRunWithSetenvSibling missing the call to method parallel in the test run"
+	t.Run("2", func(t *testing.T) {
 		fmt.Println("2")
 	})
 }
